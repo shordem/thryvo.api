@@ -24,7 +24,7 @@ func main() {
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 	}))
 	app.Use(limiter.New(limiter.Config{
-		Max:               50,
+		Max:               1000,
 		Expiration:        60 * time.Second,
 		LimiterMiddleware: limiter.FixedWindow{},
 	}))
