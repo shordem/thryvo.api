@@ -1,0 +1,58 @@
+name: Deploy to server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate .env file
+        uses: SpicyPizza/create-envfile@v2.0
+        with:
+          envkey_AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          envkey_AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          envkey_AWS_REGION: ${{ secrets.AWS_REGION }}
+          envkey_AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+
+          envkey_PORT: ${{ secrets.PORT }}
+
+          envkey_DB_HOST: ${{ secrets.DB_HOST }}
+          envkey_DB_USER: ${{ secrets.DB_USER }}
+          envkey_DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          envkey_DB_PORT: ${{ secrets.DB_PORT }}
+          envkey_DB_NAME: ${{ secrets.DB_NAME }}
+          envkey_REDIS_SERVER: ${{ secrets.REDIS_SERVER }}
+
+          envkey_JWT_ACCESS_SECRET: ${{ secrets.JWT_ACCESS_SECRET }}
+          envkey_JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+
+          file_name: .env
+          fail_on_empty: true
+
+      - name: set up golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+
+      - name: Install Dependencies
+        run: go mod download
+
+      - name: Build
+        run: go build -o thryvo
+
+  run_app:
+    runs-on: self-hosted
+    needs: build
+
+    steps:
+      - name: Reload systemd
+        run: sudo systemctl daemon-reload
+
+      - name: Restart service
+        run: sudo systemctl restart api_thryvo_com_ng.service
