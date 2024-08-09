@@ -2,7 +2,6 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
 
 	"github.com/shordem/api.thryvo/handler"
@@ -11,11 +10,6 @@ import (
 )
 
 func InitializeRouter(router *fiber.App, dbConn database.DatabaseInterface, env constants.Env) {
-	router.Use(logger.New(logger.Config{
-		Done: func(c *fiber.Ctx, logString []byte) {
-			dbConn.Cache().Set("app", string(logString))
-		},
-	}, logger.ConfigDefault))
 
 	main := router.Group("/v1", func(c *fiber.Ctx) error {
 		c.Set("Version", "v1")
