@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"encoding/hex"
 	"errors"
 	"math/rand"
 	"strconv"
@@ -67,6 +68,15 @@ func GenerateRandomString(length int) string {
 	}
 
 	return string(code)
+}
+
+func GenerateRandomHexStr(length int) string {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	code := make([]byte, length)
+	rand.Read(code)
+
+	return hex.EncodeToString(code)
 }
 
 func GenerateSlug(title string) string {
