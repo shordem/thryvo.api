@@ -17,6 +17,7 @@ func InitializeUserRouter(router fiber.Router, db database.DatabaseInterface, en
 	// Repositories
 	userRepository := user_repository.NewUserRepository(db)
 	verificationCodeRepository := user_repository.NewVerificationCodeRepository(db)
+	keyRepository := user_repository.NewKeyRepository(db)
 
 	// config
 	mailConfig := config.NewEmail(env)
@@ -24,12 +25,14 @@ func InitializeUserRouter(router fiber.Router, db database.DatabaseInterface, en
 	// Services
 	emailService := service.NewEmailService(mailConfig, db.Cache())
 	userService := user_service.NewUserService(userRepository)
+	keyService := user_service.NewKeyService(keyRepository)
 	verificationCodeService := user_service.NewVerficationCodeService(userRepository, verificationCodeRepository)
-	authService := user_service.NewAuthService(userService, verificationCodeService, emailService)
+	authService := user_service.NewAuthService(userService, verificationCodeService, keyService, emailService)
 
 	// Handler
 	authHandler := userHandler.NewAuthHandler(authService)
 	baseUserHandler := userHandler.NewUserHandler(userService)
+	keyHandler := userHandler.NewKeyHandler(keyService)
 
 	// Middlewares
 	authMiddleware := middleware.Protected()
@@ -53,4 +56,5 @@ func InitializeUserRouter(router fiber.Router, db database.DatabaseInterface, en
 	userRoute.Get("/", baseUserHandler.UserDetails)
 	userRoute.Get("/all", roleMiddleware.ValidateRole(user_service.UserRoleAdmin), baseUserHandler.FindAllUsers)
 
+	userRoute.Get("/api-key", keyHandler.GetKey)
 }
