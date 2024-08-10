@@ -28,5 +28,6 @@ type VerificationCode struct {
 type Key struct {
 	database.BaseModel
 
-	Key string `json:"key"`
+	UserID uuid.UUID `json:"user_id"`
+	Key    string    `json:"key"`
 }
