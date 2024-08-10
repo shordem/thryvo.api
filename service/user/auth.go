@@ -18,6 +18,7 @@ var (
 type authService struct {
 	userService UserServiceInterface
 	codeService VerificationCodeServiceInterface
+	keyService  KeyServiceInterface
 	encrpyt     helper.HashingInterface
 	auth        helper.AuthInterface
 	mail        service.EmailServiceInterface
@@ -38,11 +39,13 @@ type AuthServiceInterface interface {
 func NewAuthService(
 	userService UserServiceInterface,
 	codeService VerificationCodeServiceInterface,
+	keyService KeyServiceInterface,
 	mailService service.EmailServiceInterface,
 ) AuthServiceInterface {
 	return &authService{
 		userService: userService,
 		codeService: codeService,
+		keyService:  keyService,
 		encrpyt:     helper.NewHashing(),
 		auth:        helper.NewAuth(),
 		mail:        mailService,
@@ -127,13 +130,14 @@ func (service *authService) Register(authDto dto.AuthDTO) error {
 	newUser, err := service.userService.CreateUser(userDto)
 
 	if err != nil {
-		service.userService.DeleteUser(newUser.ID)
 		return err
 	}
 
-	err = service.SendEmail(authDto.Email, "confirm-email")
+	if err := service.keyService.CreateKey(newUser.ID); err != nil {
+		return err
+	}
 
-	if err != nil {
+	if err := service.SendEmail(authDto.Email, "confirm-email"); err != nil {
 		return err
 	}
 
