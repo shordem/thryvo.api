@@ -121,7 +121,6 @@ func (handler *authHandler) Register(c *fiber.Ctx) error {
 	authDto.FirstName = registerRequest.FirstName
 	authDto.LastName = registerRequest.LastName
 	authDto.Email = registerRequest.Email
-	authDto.ReferralCode = registerRequest.ReferralCode
 	authDto.Password = registerRequest.Password
 
 	if err := handler.authService.Register(authDto); err != nil {

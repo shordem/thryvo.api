@@ -6,11 +6,10 @@ type LoginRequest struct {
 }
 
 type RegisterRequest struct {
-	FirstName    string  `json:"firstname"`
-	LastName     string  `json:"lastname"`
-	Email        string  `json:"email"`
-	ReferralCode *string `json:"referral_code"`
-	Password     string  `json:"password"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
 }
 
 type RefreshAccessTokenRequest struct {

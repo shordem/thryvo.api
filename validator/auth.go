@@ -30,7 +30,6 @@ func (validator *AuthValidator) RegisterValidate(registerDto request.RegisterReq
 		validation.Field(&registerDto.FirstName, validation.Required, validation.Length(3, 32)),
 		validation.Field(&registerDto.LastName, validation.Required, validation.Length(3, 32)),
 		validation.Field(&registerDto.Email, validation.Required, validation.Length(3, 32)),
-		validation.Field(&registerDto.ReferralCode, validation.Length(10, 10)),
 		validation.Field(&registerDto.Password, validation.Required, validation.Length(3, 32)),
 	)
 
