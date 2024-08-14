@@ -10,10 +10,18 @@ import (
 	"github.com/shordem/api.thryvo/repository"
 )
 
+type FilePageable struct {
+	repository.Pageable
+
+	UserId   uuid.UUID `json:"user_id"`
+	FolderId uuid.UUID `json:"folder_id"`
+}
+
 type FileRepositoryInterface interface {
-	Create(file model.File) (model.File, error)
-	FindAllFiles(pageable repository.Pageable) ([]model.File, repository.Pagination, error)
+	CreateFile(file model.File) (model.File, error)
+	FindAllFiles(pageable FilePageable) ([]model.File, repository.Pagination, error)
 	FindFileById(uuid uuid.UUID) (model.File, error)
+	FindFileByKeyName(keyName string) (model.File, error)
 	UpdateFile(file model.File) (model.File, error)
 	DeleteFile(uuid uuid.UUID) error
 }
@@ -26,8 +34,8 @@ func NewFileRepository(database database.DatabaseInterface) FileRepositoryInterf
 	return &fileRepository{database: database}
 }
 
-// Create implements FileRepositoryInterface.
-func (f *fileRepository) Create(file model.File) (model.File, error) {
+// CreateFile implements FileRepositoryInterface.
+func (f *fileRepository) CreateFile(file model.File) (model.File, error) {
 	file.Prepare()
 
 	err := f.database.Connection().Create(&file).Error
@@ -44,6 +52,15 @@ func (f *fileRepository) FindFileById(uuid uuid.UUID) (model.File, error) {
 	var file model.File
 
 	err := f.database.Connection().Where("id = ?", uuid).First(&file).Error
+
+	return file, err
+}
+
+// FindFileByKeyName implements FileRepositoryInterface.
+func (f *fileRepository) FindFileByKeyName(keyName string) (model.File, error) {
+	var file model.File
+
+	err := f.database.Connection().Where("key = ?", keyName).First(&file).Error
 
 	return file, err
 }
@@ -67,7 +84,7 @@ func (f *fileRepository) DeleteFile(uuid uuid.UUID) error {
 }
 
 // FindAllFiles implements FileRepositoryInterface.
-func (f *fileRepository) FindAllFiles(pageable repository.Pageable) (files []model.File, pagination repository.Pagination, err error) {
+func (f *fileRepository) FindAllFiles(pageable FilePageable) (files []model.File, pagination repository.Pagination, err error) {
 	var file model.File
 
 	pagination.CurrentPage = int64(pageable.Page)
@@ -80,6 +97,14 @@ func (f *fileRepository) FindAllFiles(pageable repository.Pageable) (files []mod
 
 	if len(search) > 0 {
 		model = model.Where("original_name LIKE ?", "%"+search+"%")
+	}
+
+	if pageable.UserId != uuid.Nil {
+		model = model.Where("user_id = ?", pageable.UserId)
+
+		if pageable.FolderId != uuid.Nil {
+			model = model.Where("folder_id = ?", pageable.FolderId)
+		}
 	}
 
 	if err = model.Count(&pagination.TotalItems).Error; err != nil {
