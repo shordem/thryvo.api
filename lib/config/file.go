@@ -18,19 +18,20 @@ import (
 )
 
 type FileConfigInterface interface {
-	UploadFile(file *multipart.FileHeader) (string, error)
-	GetObject(fileName string) (dto.GetFileDTO, error)
+	UploadFile(userId string, file *multipart.FileHeader) (string, error)
+	GetObject(path string) (dto.GetFileDTO, error)
+	DeleteObject(key string) error
+	GetObjectPath(userId string, key string) string
 }
 
 type file struct {
-	bucket, folder string
-	service        *s3.S3
+	bucket  string
+	service *s3.S3
 }
 
-func NewFileHelper(env constants.Env) FileConfigInterface {
+func NewFileConfig(env constants.Env) FileConfigInterface {
 	return &file{
 		bucket:  env.AWS_BUCKET,
-		folder:  "mazimart",
 		service: s3.New(AWSConfig(env.AWS_REGION, env.AWS_ACCESS_KEY, env.AWS_SECRET_KEY)),
 	}
 }
@@ -42,8 +43,9 @@ func AWSConfig(region string, accessKey string, secretKey string) *session.Sessi
 	}))
 }
 
-func (m *file) UploadFile(file *multipart.FileHeader) (string, error) {
-	fileName := m.FileName(file.Filename)
+func (m *file) UploadFile(userId string, file *multipart.FileHeader) (string, error) {
+	key := m.FileKey(file.Filename)
+	path := m.GetObjectPath(userId, key)
 	fileOpen, openErr := file.Open()
 
 	if openErr != nil {
@@ -63,7 +65,7 @@ func (m *file) UploadFile(file *multipart.FileHeader) (string, error) {
 	// Uploads the object to S3
 	_, err := m.service.PutObject(&s3.PutObjectInput{
 		Bucket: helper.StringToPointer(m.bucket),
-		Key:    helper.StringToPointer(m.GetObjectKey(fileName)),
+		Key:    helper.StringToPointer(path),
 		Body:   bytes.NewReader(fileContent.Bytes()),
 	})
 
@@ -71,16 +73,16 @@ func (m *file) UploadFile(file *multipart.FileHeader) (string, error) {
 		return "", err
 	}
 
-	return fileName, nil
+	return key, nil
 }
 
-func (m *file) GetObject(key string) (dto.GetFileDTO, error) {
+func (m *file) GetObject(path string) (dto.GetFileDTO, error) {
 	var media dto.GetFileDTO
 
 	// Downloads the object to a file
 	obj, err := m.service.GetObject(&s3.GetObjectInput{
 		Bucket: helper.StringToPointer(m.bucket),
-		Key:    helper.StringToPointer(m.GetObjectKey(key)),
+		Key:    helper.StringToPointer(path),
 	})
 
 	if err != nil {
@@ -94,13 +96,22 @@ func (m *file) GetObject(key string) (dto.GetFileDTO, error) {
 	return media, nil
 }
 
-func (m *file) FileName(name string) string {
+func (m *file) DeleteObject(key string) error {
+	_, err := m.service.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: helper.StringToPointer(m.bucket),
+		Key:    helper.StringToPointer(key),
+	})
+
+	return err
+}
+
+func (m *file) FileKey(name string) string {
 	filename, _ := helper.GenerateSnowflakeID()
-	fileExt := strings.Split(name, ".")[1]
+	fileExt := strings.Split(name, ".")[len(strings.Split(name, "."))-1]
 
 	return fmt.Sprintf("%d.%s", filename, fileExt)
 }
 
-func (m *file) GetObjectKey(key string) string {
-	return fmt.Sprintf(m.folder + "/" + key)
+func (m *file) GetObjectPath(userId string, key string) string {
+	return fmt.Sprintf(userId + "/" + key)
 }
