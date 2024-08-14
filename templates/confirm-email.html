@@ -1,0 +1,38 @@
+{{define "content"}}
+<tr>
+  <td>
+    <p>
+      Thank you for registering with thryvo. To complete your registration,
+      please verify your account using the One-Time Password (OTP) below:
+    </p>
+  </td>
+</tr>
+
+<tr align="center">
+  <td style="padding: 28px 0">
+    {{range .Code}}
+    <span
+      style="
+        background-color: #ccebff;
+        font-weight: 600;
+        padding: 8px 16px;
+        margin: 0 10px;
+        border-radius: 0.5rem;
+      "
+    >
+      {{.}}
+    </span>
+    {{end}}
+  </td>
+</tr>
+
+<tr>
+  <td>
+    <p>Enter this code on the registration page to activate your account.</p>
+    <p>Please note that this OTP is only valid for a maximum of 1 hour.</p>
+    <p>
+      If you did not register for a thryvo account, please ignore this email.
+    </p>
+  </td>
+</tr>
+{{end}}
