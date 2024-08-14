@@ -59,7 +59,7 @@ func (k *keyRepository) FindKeyByUserID(uuid uuid.UUID) (model.Key, error) {
 func (k *keyRepository) FindUserIDByKey(key string) (model.Key, error) {
 	var keyModel model.Key
 
-	err := k.database.Connection().Where("key = ?", key).First(&k).Error
+	err := k.database.Connection().Where("key = ?", key).First(&keyModel).Error
 
 	return keyModel, err
 }
@@ -85,7 +85,7 @@ func (k *keyRepository) DeleteKey(uuid uuid.UUID) error {
 // UpdateKey implements KeyRepositoryInterface.
 func (k *keyRepository) UpdateKey(key model.Key) (model.Key, error) {
 
-	err := k.database.Connection().Save(&key).Error
+	err := k.database.Connection().Updates(&key).Error
 
 	if err != nil {
 		return model.Key{}, err
