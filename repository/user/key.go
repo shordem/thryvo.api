@@ -11,6 +11,7 @@ type KeyRepositoryInterface interface {
 	Create(key model.Key) (model.Key, error)
 	FindKeyById(uuid uuid.UUID) (model.Key, error)
 	FindKeyByUserID(uuid uuid.UUID) (model.Key, error)
+	FindUserIDByKey(key string) (model.Key, error)
 	UpdateKey(key model.Key) (model.Key, error)
 	DeleteKey(uuid uuid.UUID) error
 }
@@ -52,6 +53,15 @@ func (k *keyRepository) FindKeyByUserID(uuid uuid.UUID) (model.Key, error) {
 	err := k.database.Connection().Where("user_id = ?", uuid).First(&key).Error
 
 	return key, err
+}
+
+// FindUserIDByKey implements KeyRepositoryInterface.
+func (k *keyRepository) FindUserIDByKey(key string) (model.Key, error) {
+	var keyModel model.Key
+
+	err := k.database.Connection().Where("key = ?", key).First(&k).Error
+
+	return keyModel, err
 }
 
 // DeleteKey implements KeyRepositoryInterface.
