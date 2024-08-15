@@ -2,6 +2,7 @@ package core_handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -27,6 +28,39 @@ type fileHandler struct {
 
 func NewFileHandler(fileService core_service.FileServiceInterface) FileHandlerInterface {
 	return &fileHandler{fileService: fileService}
+}
+
+func (h *fileHandler) GeneratePageable(c *fiber.Ctx) (filePageable core_repository.FilePageable) {
+	var resp response.Response
+
+	filePageable.Pageable = handler.GeneratePageable(c)
+	filePageable.UserId = handler.GetUserId(c)
+
+	if folderId := c.Query("folder_id"); folderId != "" {
+		folderIdParsed, err := uuid.Parse(folderId)
+		if err != nil {
+			resp.Status = constants.ClientErrorBadRequest
+			resp.Message = err.Error()
+
+			c.Status(http.StatusBadRequest).JSON(resp)
+		}
+
+		filePageable.FolderId = folderIdParsed
+	}
+
+	if hasFolder := c.Query("has_folder"); hasFolder != "" {
+		hasFolderConv, err := strconv.ParseBool(hasFolder)
+		if err != nil {
+			resp.Status = constants.ClientUnProcessableEntity
+			resp.Message = "has_folder query is not a valid boolean format"
+
+			c.Status(http.StatusUnprocessableEntity).JSON(resp)
+		}
+
+		filePageable.HasFolder = hasFolderConv
+	}
+
+	return filePageable
 }
 
 func (h *fileHandler) UploadFile(c *fiber.Ctx) error {
@@ -77,24 +111,9 @@ func (h *fileHandler) UploadFile(c *fiber.Ctx) error {
 
 func (h *fileHandler) GetUserFiles(c *fiber.Ctx) error {
 	var resp response.Response
-	var filePageable core_repository.FilePageable
+	pageable := h.GeneratePageable(c)
 
-	if folderId := c.Query("folder_id"); folderId != "" {
-		folderIdParsed, err := uuid.Parse(folderId)
-		if err != nil {
-			resp.Status = constants.ClientErrorBadRequest
-			resp.Message = err.Error()
-
-			return c.Status(http.StatusBadRequest).JSON(resp)
-		}
-
-		filePageable.FolderId = folderIdParsed
-	}
-
-	filePageable.Pageable = handler.GeneratePageable(c)
-	filePageable.UserId = handler.GetUserId(c)
-
-	files, pagination, err := h.fileService.FindAllFiles(filePageable)
+	files, pagination, err := h.fileService.FindAllFiles(pageable)
 	if err != nil {
 		resp.Status = constants.ServerErrorExternalService
 		resp.Message = "Failed to get user files"
