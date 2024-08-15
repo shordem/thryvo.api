@@ -13,6 +13,7 @@ type FolderRepositoryInterface interface {
 	CreateFolder(folder model.Folder) (model.Folder, error)
 	FindFoldersByUserId(userId uuid.UUID) ([]model.Folder, error)
 	FindFoldersByParentId(userId uuid.UUID, parentId uuid.UUID) ([]model.Folder, error)
+	FindFolderById(id uuid.UUID) (model.Folder, error)
 	UpdateFolder(folder model.Folder) (model.Folder, error)
 	DeleteFolder(id uuid.UUID, userId uuid.UUID) error
 }
@@ -70,6 +71,17 @@ func (f *folderRepository) FindFoldersByParentId(userId uuid.UUID, parentId uuid
 	}
 
 	return folders, nil
+}
+
+// FindFolderById implements FolderRepositoryInterface.
+func (f *folderRepository) FindFolderById(id uuid.UUID) (model.Folder, error) {
+	var folder model.Folder
+
+	if err := f.database.Connection().First(&folder, "id = ?", id).Error; err != nil {
+		return model.Folder{}, err
+	}
+
+	return folder, nil
 }
 
 // UpdateFolder implements FolderRepositoryInterface.
