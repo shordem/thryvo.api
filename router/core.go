@@ -23,7 +23,7 @@ func InitializeCoreRouter(router fiber.Router, db database.DatabaseInterface, en
 	userRepository := user_repository.NewUserRepository(db)
 
 	// service
-	fileService := core_service.NewFileService(fileConfig, fileRepository, userRepository)
+	fileService := core_service.NewFileService(fileConfig, fileRepository, folderRepository, userRepository)
 	folderService := core_service.NewFolderService(folderRepository, userRepository)
 
 	// handler
