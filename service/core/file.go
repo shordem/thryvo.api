@@ -1,6 +1,7 @@
 package core_service
 
 import (
+	"errors"
 	"mime/multipart"
 
 	"github.com/shordem/api.thryvo/dto"
@@ -9,6 +10,7 @@ import (
 	"github.com/shordem/api.thryvo/repository"
 	core_repository "github.com/shordem/api.thryvo/repository/core"
 	user_repository "github.com/shordem/api.thryvo/repository/user"
+	"gorm.io/gorm"
 )
 
 var (
@@ -24,20 +26,23 @@ type FileServiceInterface interface {
 }
 
 type fileService struct {
-	fileConfig     config.FileConfigInterface
-	fileRepository core_repository.FileRepositoryInterface
-	userRepository user_repository.UserRepositoryInterface
+	fileConfig       config.FileConfigInterface
+	fileRepository   core_repository.FileRepositoryInterface
+	folderRepository core_repository.FolderRepositoryInterface
+	userRepository   user_repository.UserRepositoryInterface
 }
 
 func NewFileService(
 	fileConfig config.FileConfigInterface,
 	fileRepository core_repository.FileRepositoryInterface,
+	folderRepository core_repository.FolderRepositoryInterface,
 	userRepository user_repository.UserRepositoryInterface,
 ) FileServiceInterface {
 	return &fileService{
-		fileConfig:     fileConfig,
-		fileRepository: fileRepository,
-		userRepository: userRepository,
+		fileConfig:       fileConfig,
+		fileRepository:   fileRepository,
+		folderRepository: folderRepository,
+		userRepository:   userRepository,
 	}
 }
 
@@ -45,7 +50,6 @@ func (f *fileService) ConvertToDTO(file model.File) dto.FileDTO {
 	var fileDto dto.FileDTO
 
 	fileDto.ID = file.ID
-	fileDto.UserID = file.UserID
 	fileDto.OriginalName = file.OriginalName
 	fileDto.Key = file.Key
 	fileDto.MimeType = file.MimeType
@@ -53,7 +57,11 @@ func (f *fileService) ConvertToDTO(file model.File) dto.FileDTO {
 	fileDto.Visibility = file.Visibility
 	fileDto.CreatedAt = file.CreatedAt
 	fileDto.UpdatedAt = file.UpdatedAt
-	fileDto.DeletedAt = file.DeletedAt.Time
+	if file.Folder != nil {
+		fileDto.Folder = &dto.FolderDTO{
+			Name: file.Folder.Name,
+		}
+	}
 
 	return fileDto
 }
@@ -63,6 +71,7 @@ func (f *fileService) ConvertToModel(fileDto dto.FileDTO) model.File {
 
 	file.ID = fileDto.ID
 	file.UserID = fileDto.UserID
+	file.FolderID = fileDto.FolderID
 	file.OriginalName = fileDto.OriginalName
 	file.Key = fileDto.Key
 	file.MimeType = fileDto.MimeType
@@ -77,12 +86,25 @@ func (f *fileService) ConvertToModel(fileDto dto.FileDTO) model.File {
 
 func (f *fileService) UploadFile(fileDto dto.FileDTO, file *multipart.FileHeader) (string, error) {
 
-	user, err := f.userRepository.FindUserById(fileDto.UserID)
-	if err != nil {
+	if _, err := f.userRepository.FindUserById(fileDto.UserID); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", errors.New("user not found")
+		}
+
 		return "", err
 	}
 
-	key, err := f.fileConfig.UploadFile(user.ID.String(), file)
+	if fileDto.FolderID != nil {
+		if _, err := f.folderRepository.FindFolderById(*fileDto.FolderID); err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return "", errors.New("folder not found")
+			}
+
+			return "", err
+		}
+	}
+
+	key, err := f.fileConfig.UploadFile(fileDto.UserID.String(), file)
 	if err != nil {
 		return "", err
 	}
@@ -93,7 +115,7 @@ func (f *fileService) UploadFile(fileDto dto.FileDTO, file *multipart.FileHeader
 
 	_, err = f.fileRepository.CreateFile(fileModel)
 	if err != nil {
-		f.fileConfig.DeleteObject(f.fileConfig.GetObjectPath(user.ID.String(), key))
+		f.fileConfig.DeleteObject(f.fileConfig.GetObjectPath(fileDto.UserID.String(), key))
 		return "", err
 	}
 
