@@ -93,7 +93,7 @@ func (f *fileRepository) FindAllFiles(pageable FilePageable) (files []model.File
 
 	search := strings.TrimSpace(pageable.Search)
 	offset := (pageable.Page - 1) * pageable.Size
-	model := f.database.Connection().Model(&file)
+	model := f.database.Connection().Model(&file).Preload("Folder")
 
 	if len(search) > 0 {
 		model = model.Where("original_name LIKE ?", "%"+search+"%")
