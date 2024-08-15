@@ -13,8 +13,9 @@ import (
 type FilePageable struct {
 	repository.Pageable
 
-	UserId   uuid.UUID `json:"user_id"`
-	FolderId uuid.UUID `json:"folder_id"`
+	UserId    uuid.UUID `json:"user_id"`
+	FolderId  uuid.UUID `json:"folder_id"`
+	HasFolder bool      `json:"has_folder"`
 }
 
 type FileRepositoryInterface interface {
@@ -104,6 +105,10 @@ func (f *fileRepository) FindAllFiles(pageable FilePageable) (files []model.File
 
 		if pageable.FolderId != uuid.Nil {
 			model = model.Where("folder_id = ?", pageable.FolderId)
+		}
+
+		if !pageable.HasFolder && pageable.FolderId == uuid.Nil {
+			model = model.Where("folder_id IS NULL")
 		}
 	}
 
