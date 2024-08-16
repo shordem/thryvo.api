@@ -94,7 +94,7 @@ func (h *fileHandler) UploadFile(c *fiber.Ctx) error {
 	fileDto.Size = file.Size
 	fileDto.Visibility = core_service.FileVisibilityPublic
 
-	fileKey, err := h.fileService.UploadFile(fileDto, file)
+	uploadedFile, err := h.fileService.UploadFile(fileDto, file)
 	if err != nil {
 		resp.Status = constants.ServerErrorExternalService
 		resp.Message = err.Error()
@@ -104,7 +104,7 @@ func (h *fileHandler) UploadFile(c *fiber.Ctx) error {
 
 	resp.Status = constants.SuccessOperationCompleted
 	resp.Message = "file uploaded successfully"
-	resp.Data = map[string]interface{}{"result": fileKey}
+	resp.Data = map[string]interface{}{"result": uploadedFile}
 
 	return c.Status(http.StatusOK).JSON(resp)
 }

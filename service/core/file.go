@@ -2,10 +2,12 @@ package core_service
 
 import (
 	"errors"
+	"fmt"
 	"mime/multipart"
 
 	"github.com/shordem/api.thryvo/dto"
 	"github.com/shordem/api.thryvo/lib/config"
+	"github.com/shordem/api.thryvo/lib/constants"
 	"github.com/shordem/api.thryvo/model"
 	"github.com/shordem/api.thryvo/repository"
 	core_repository "github.com/shordem/api.thryvo/repository/core"
@@ -19,7 +21,7 @@ var (
 )
 
 type FileServiceInterface interface {
-	UploadFile(fileDto dto.FileDTO, file *multipart.FileHeader) (string, error)
+	UploadFile(fileDto dto.FileDTO, file *multipart.FileHeader) (dto.UploadedFileDTO, error)
 	FindAllFiles(pageable core_repository.FilePageable) ([]dto.FileDTO, repository.Pagination, error)
 	GetFile(fileName string) (dto.GetFileDTO, error)
 	GetFileInfo(fileName string) (dto.FileDTO, error)
@@ -84,29 +86,30 @@ func (f *fileService) ConvertToModel(fileDto dto.FileDTO) model.File {
 	return file
 }
 
-func (f *fileService) UploadFile(fileDto dto.FileDTO, file *multipart.FileHeader) (string, error) {
+func (f *fileService) UploadFile(fileDto dto.FileDTO, file *multipart.FileHeader) (dto.UploadedFileDTO, error) {
+	var uploadedFileDto dto.UploadedFileDTO
 
 	if _, err := f.userRepository.FindUserById(fileDto.UserID); err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return "", errors.New("user not found")
+			return dto.UploadedFileDTO{}, errors.New("user not found")
 		}
 
-		return "", err
+		return dto.UploadedFileDTO{}, err
 	}
 
 	if fileDto.FolderID != nil {
 		if _, err := f.folderRepository.FindFolderById(*fileDto.FolderID); err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return "", errors.New("folder not found")
+				return dto.UploadedFileDTO{}, errors.New("folder not found")
 			}
 
-			return "", err
+			return dto.UploadedFileDTO{}, err
 		}
 	}
 
 	key, err := f.fileConfig.UploadFile(fileDto.UserID.String(), file)
 	if err != nil {
-		return "", err
+		return dto.UploadedFileDTO{}, err
 	}
 
 	fileDto.Key = key
@@ -116,10 +119,13 @@ func (f *fileService) UploadFile(fileDto dto.FileDTO, file *multipart.FileHeader
 	_, err = f.fileRepository.CreateFile(fileModel)
 	if err != nil {
 		f.fileConfig.DeleteObject(f.fileConfig.GetObjectPath(fileDto.UserID.String(), key))
-		return "", err
+		return dto.UploadedFileDTO{}, err
 	}
 
-	return key, nil
+	uploadedFileDto.Key = key
+	uploadedFileDto.URL = fmt.Sprintf("%s/%s/%s", constants.APP_URL, fileDto.UserID, key)
+
+	return uploadedFileDto, nil
 }
 
 func (f *fileService) FindAllFiles(pageable core_repository.FilePageable) ([]dto.FileDTO, repository.Pagination, error) {
