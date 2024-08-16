@@ -28,6 +28,11 @@ type FileDTO struct {
 	Folder *FolderDTO `json:"folder"`
 }
 
+type UploadedFileDTO struct {
+	Key string `json:"key"`
+	URL string `json:"url"`
+}
+
 type FolderDTO struct {
 	DTO
 
