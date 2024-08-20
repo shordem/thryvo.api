@@ -130,9 +130,10 @@ func (h *fileHandler) GetUserFiles(c *fiber.Ctx) error {
 
 func (h *fileHandler) GetFile(c *fiber.Ctx) error {
 	var resp response.Response
+	userId := c.Params("user_id")
 	mediaId := c.Params("key")
 
-	media, err := h.fileService.GetFile(mediaId)
+	media, err := h.fileService.GetFile(userId, mediaId)
 	if err != nil {
 		resp.Status = constants.ServerErrorExternalService
 		resp.Message = "Failed to get media"

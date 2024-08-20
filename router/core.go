@@ -40,7 +40,7 @@ func InitializeCoreRouter(router fiber.Router, db database.DatabaseInterface, en
 
 	fileRouter.Post("/upload", apiKeyMiddleware, fileHandler.UploadFile)
 	fileRouter.Get("/", authMiddleware, fileHandler.GetUserFiles)
-	fileRouter.Get("/:key", fileHandler.GetFile)
+	fileRouter.Get("/:user_id/:key", fileHandler.GetFile)
 
 	folderRouter.Post("/", authMiddleware, folderHandler.CreateFolder)
 	folderRouter.Get("/", authMiddleware, folderHandler.GetUserFolders)

@@ -23,7 +23,7 @@ var (
 type FileServiceInterface interface {
 	UploadFile(fileDto dto.FileDTO, file *multipart.FileHeader) (dto.UploadedFileDTO, error)
 	FindAllFiles(pageable core_repository.FilePageable) ([]dto.FileDTO, repository.Pagination, error)
-	GetFile(fileName string) (dto.GetFileDTO, error)
+	GetFile(userId string, fileName string) (dto.GetFileDTO, error)
 	GetFileInfo(fileName string) (dto.FileDTO, error)
 }
 
@@ -146,8 +146,9 @@ func (f *fileService) FindAllFiles(pageable core_repository.FilePageable) ([]dto
 	return filesDto, pagination, nil
 }
 
-func (f *fileService) GetFile(fileName string) (dto.GetFileDTO, error) {
-	return f.fileConfig.GetObject(fileName)
+func (f *fileService) GetFile(userId string, fileName string) (dto.GetFileDTO, error) {
+	key := f.fileConfig.GetObjectPath(userId, fileName)
+	return f.fileConfig.GetObject(key)
 }
 
 func (f *fileService) GetFileInfo(fileName string) (dto.FileDTO, error) {
