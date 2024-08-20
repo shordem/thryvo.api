@@ -26,7 +26,7 @@ func (s *seeder) Seed() {
 
 func (s *seeder) SeedAdmin() {
 	hashing := helper.NewHashing()
-	adminEmail := "admin@mazimart.com.ng"
+	adminEmail := "admin@thyvo.co"
 	testEmail := "test@email.com"
 	hashedPassword, err := hashing.HashPassword("password")
 	if err != nil {
@@ -66,8 +66,9 @@ func (s *seeder) SeedAdmin() {
 	} else {
 		if err := s.dbConn.Connection().Create(&adminUser).Error; err != nil {
 			fmt.Println("Failed to create admin user:", err)
+		} else {
+			fmt.Println("Admin user created successfully.")
 		}
-		fmt.Println("Admin user created successfully.")
 	}
 
 	if testUserExists {
@@ -75,8 +76,9 @@ func (s *seeder) SeedAdmin() {
 	} else {
 		if err := s.dbConn.Connection().Create(&testUser).Error; err != nil {
 			fmt.Println("Failed to create test user:", err)
+		} else {
+			fmt.Println("Test user created successfully.")
 		}
-		fmt.Println("Test user created successfully.")
 	}
 
 }
