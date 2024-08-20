@@ -42,9 +42,6 @@ func NewPostgresClient(env constants.Env) PostgresClientInterface {
 
 	fmt.Println("Database connection is successful")
 
-	database.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
-	database.Exec("CREATE EXTENSION IF NOT EXISTS pgcrypto")
-
 	// defer sqlDb.Close()
 
 	DatabaseFacade = database
