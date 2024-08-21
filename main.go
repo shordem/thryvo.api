@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	app := fiber.New(fiber.Config{AppName: "Mazimart v0.0.1"})
+	app := fiber.New(fiber.Config{AppName: "Thryvo v0.0.1"})
 
 	app.Use(logger.New(logger.Config{}))
 	app.Use(recover.New())
