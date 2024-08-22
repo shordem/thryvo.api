@@ -29,8 +29,9 @@ type FileDTO struct {
 }
 
 type UploadedFileDTO struct {
-	Key string `json:"key"`
-	URL string `json:"url"`
+	Key  string  `json:"key"`
+	URL  string  `json:"url"`
+	Info FileDTO `json:"info"`
 }
 
 type FolderDTO struct {

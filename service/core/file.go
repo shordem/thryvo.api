@@ -124,6 +124,7 @@ func (f *fileService) UploadFile(fileDto dto.FileDTO, file *multipart.FileHeader
 
 	uploadedFileDto.Key = key
 	uploadedFileDto.URL = fmt.Sprintf("%s/%s/%s/%s", constants.APP_URL, "file", fileDto.UserID, key)
+	uploadedFileDto.Info = fileDto
 
 	return uploadedFileDto, nil
 }
