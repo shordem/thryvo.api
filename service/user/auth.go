@@ -285,11 +285,11 @@ func (s *authService) SendEmail(email string, templateType string) error {
 	sendEmailParams.Variables = emailVars
 	switch templateType {
 	case "confirm-email":
-		sendEmailParams.Subject = "Thanks for Signing Up on Thryvo"
+		sendEmailParams.Subject = "Thanks for Signing Up on FileCapsa"
 		_ = s.mail.SendEmail(sendEmailParams)
 
 	case "reset-password":
-		sendEmailParams.Subject = "Thryvo Reset Password Request"
+		sendEmailParams.Subject = "FileCapsa Reset Password Request"
 		_ = s.mail.SendEmail(sendEmailParams)
 	}
 
