@@ -20,7 +20,6 @@ type InitializePaymentRequest struct {
 	Currency    string
 	Reference   string
 	CallbackURL string
-	Metadata    map[string]interface{}
 }
 
 // InitializePaymentResponse contains payment initialization response

@@ -206,14 +206,11 @@ func (s *subscriptionService) InitializePayment(ctx context.Context, userID uuid
 
 	// Initialize payment
 	paymentReq := &payment.InitializePaymentRequest{
-		Email:     user.Email,
-		Amount:    plan.Price,
-		Currency:  plan.Currency,
-		Reference: reference,
-		Metadata: map[string]interface{}{
-			"user_id": userID.String(),
-			"plan_id": plan.ID.String(),
-		},
+		Email:       user.Email,
+		Amount:      plan.Price,
+		Currency:    plan.Currency,
+		Reference:   reference,
+		CallbackURL: "https://filecapsa.com/subscription/verify",
 	}
 
 	paymentResp, err := gateway.Initialize(ctx, paymentReq)
