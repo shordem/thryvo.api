@@ -11,7 +11,7 @@ import (
 	"github.com/shordem/api.thryvo/lib/constants"
 )
 
-var SenderName = "Mazimart"
+var SenderName = "FileCapsa"
 
 type EmailInterface interface {
 	SendWithTemplate(to, subject, templateFile string, data interface{}) error
