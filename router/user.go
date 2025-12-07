@@ -13,7 +13,7 @@ import (
 	user_service "github.com/shordem/api.thryvo/service/user"
 )
 
-func InitializeUserRouter(router fiber.Router, db database.DatabaseInterface, env constants.Env) {
+func InitializeUserRouter(router fiber.Router, db database.DatabaseInterface, env constants.Env, subscriptionService user_service.SubscriptionChecker) {
 	// Repositories
 	userRepository := user_repository.NewUserRepository(db)
 	verificationCodeRepository := user_repository.NewVerificationCodeRepository(db)
@@ -25,7 +25,7 @@ func InitializeUserRouter(router fiber.Router, db database.DatabaseInterface, en
 	// Services
 	emailService := service.NewEmailService(mailConfig, db.Cache())
 	userService := user_service.NewUserService(userRepository)
-	keyService := user_service.NewKeyService(keyRepository)
+	keyService := user_service.NewKeyService(keyRepository, subscriptionService)
 	verificationCodeService := user_service.NewVerficationCodeService(userRepository, verificationCodeRepository)
 	authService := user_service.NewAuthService(userService, verificationCodeService, keyService, emailService)
 
@@ -54,6 +54,7 @@ func InitializeUserRouter(router fiber.Router, db database.DatabaseInterface, en
 	authRoute.Post("/reset-password", authHandler.ResetPassword)
 
 	userRoute.Get("/", baseUserHandler.UserDetails)
+	userRoute.Get("/details", baseUserHandler.UserDetails)
 	userRoute.Get("/all", roleMiddleware.ValidateRole(user_service.UserRoleAdmin), baseUserHandler.FindAllUsers)
 
 	userRoute.Get("/api-key", keyHandler.GetKey)
