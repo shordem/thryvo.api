@@ -210,7 +210,7 @@ func (s *subscriptionService) InitializePayment(ctx context.Context, userID uuid
 		Amount:      plan.Price,
 		Currency:    plan.Currency,
 		Reference:   reference,
-		CallbackURL: "https://filecapsa.com/subscription/verify",
+		CallbackURL: "https://filecapsa.com/dashboard/subscription/verify",
 	}
 
 	paymentResp, err := gateway.Initialize(ctx, paymentReq)
