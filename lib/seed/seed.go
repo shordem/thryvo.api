@@ -26,7 +26,7 @@ func (s *seeder) Seed() {
 
 func (s *seeder) SeedAdmin() {
 	hashing := helper.NewHashing()
-	adminEmail := "admin@thyvo.co"
+	adminEmail := "admin@filecapsa.com"
 	testEmail := "test@email.com"
 	hashedPassword, err := hashing.HashPassword("password")
 	if err != nil {
