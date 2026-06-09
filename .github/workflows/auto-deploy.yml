@@ -2,6 +2,7 @@ name: Deploy to server
 
 on:
   push:
+    workflow_dispatch:
     branches:
       - main
 
@@ -16,7 +17,6 @@ jobs:
         uses: horlakz/secretenv@v1
         with:
           secrets_json: ${{ toJSON(secrets) }}
-
 
       - name: set up golang
         uses: actions/setup-go@v5
