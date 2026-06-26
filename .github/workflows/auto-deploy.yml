@@ -2,13 +2,17 @@ name: Deploy to server
 
 on:
   push:
-    workflow_dispatch:
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-filecapsa-main
+  cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: self-hosted
+  deploy:
+    runs-on: [self-hosted, linux, x64, filecapsa]
 
     steps:
       - uses: actions/checkout@v4
@@ -18,24 +22,31 @@ jobs:
         with:
           secrets_json: ${{ toJSON(secrets) }}
 
-      - name: set up golang
+      - name: Set up golang
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22
-
-      - name: Install Dependencies
-        run: go mod download
+          go-version-file: go.mod
+          cache: true
 
       - name: Build
-        run: go build -o thryvo
+        run: go build -o filecapsa .
 
-  run_app:
-    runs-on: self-hosted
-    needs: build
+      - name: Prepare release directory
+        run: mkdir -p /opt/filecapsa/current
 
-    steps:
+      - name: Deploy binary, env and runtime assets
+        run: |
+          install -m 0755 filecapsa /opt/filecapsa/current/filecapsa
+          install -m 0600 .env /opt/filecapsa/current/.env
+          rm -rf /opt/filecapsa/current/templates /opt/filecapsa/current/migrations
+          cp -R templates /opt/filecapsa/current/templates
+          cp -R migrations /opt/filecapsa/current/migrations
+
       - name: Reload systemd
         run: sudo systemctl daemon-reload
 
       - name: Restart service
-        run: sudo systemctl restart api_thryvo_com_ng.service
+        run: sudo systemctl restart filecapsa
+
+      - name: Verify service
+        run: sudo systemctl --no-pager --full status filecapsa
