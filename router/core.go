@@ -34,6 +34,9 @@ func InitializeCoreRouter(router fiber.Router, db database.DatabaseInterface, en
 	authMiddleware := middleware.Protected()
 	apiKeyMiddleware := middleware.RequireAPIKey(db)
 
+	// hot fix for upload server
+	router.Post("/files", apiKeyMiddleware, fileHandler.UploadFile)
+
 	// Base routes
 	fileRouter := router.Group("/file")
 	folderRouter := router.Group("/folder")
