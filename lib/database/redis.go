@@ -22,8 +22,8 @@ type RedisClientInterface interface {
 func NewRedisClient(env constants.Env) RedisClientInterface {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     env.REDIS_SERVER,
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Password: env.REDIS_PASSWORD,
+		DB:       0, // use default DB
 	})
 
 	res, err := rdb.Ping(ctx).Result()
