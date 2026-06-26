@@ -61,6 +61,7 @@ func GetEnv() Env {
 		DB_PORT:                os.Getenv("DB_PORT"),
 		DB_NAME:                os.Getenv("DB_NAME"),
 		REDIS_SERVER:           os.Getenv("REDIS_SERVER"),
+		REDIS_PASSWORD:         os.Getenv("REDIS_PASSWORD"),
 		JWT_ACCESS_SECRET:      os.Getenv("JWT_ACCESS_SECRET"),
 		JWT_REFRESH_SECRET:     os.Getenv("JWT_REFRESH_SECRET"),
 		FROM_EMAIL:             os.Getenv("FROM_EMAIL"),
