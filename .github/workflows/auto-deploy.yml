@@ -42,7 +42,6 @@ jobs:
           docker run -d \
             --restart unless-stopped \
             --name filecapsa \
-            --network knobuk-net \
             --env-file .env \
             -p 8100:${{ secrets.PORT }} \
             filecapsa:${{ github.sha }}
