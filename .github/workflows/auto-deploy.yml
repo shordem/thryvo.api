@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    runs-on: [self-hosted, linux, x64, filecapsa]
+  build:
+    runs-on: [self-hosted, linux, x64, core-filecapsa]
 
     steps:
       - uses: actions/checkout@v4
@@ -22,31 +22,27 @@ jobs:
         with:
           secrets_json: ${{ toJSON(secrets) }}
 
-      - name: Set up golang
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
+      - name: Build Docker image
+        run: docker build . -t filecapsa:${{ github.sha }}
 
-      - name: Build
-        run: go build -o filecapsa .
+  run:
+    runs-on: self-hosted
+    needs:
+      - build
 
-      - name: Prepare release directory
-        run: mkdir -p /opt/filecapsa/current
-
-      - name: Deploy binary, env and runtime assets
+    steps:
+      - name: Remove old container
         run: |
-          install -m 0755 filecapsa /opt/filecapsa/current/filecapsa
-          install -m 0600 .env /opt/filecapsa/current/.env
-          rm -rf /opt/filecapsa/current/templates /opt/filecapsa/current/migrations
-          cp -R templates /opt/filecapsa/current/templates
-          cp -R migrations /opt/filecapsa/current/migrations
+          if [ "$(docker ps -aq -f name=^filecapsa$)" ]; then
+            docker rm --force filecapsa
+          fi
 
-      - name: Reload systemd
-        run: sudo systemctl daemon-reload
-
-      - name: Restart service
-        run: sudo systemctl restart filecapsa
-
-      - name: Verify service
-        run: sudo systemctl --no-pager --full status filecapsa
+      - name: Run new container
+        run: |
+          docker run -d \
+            --restart unless-stopped \
+            --name filecapsa \
+            --network knobuk-net \
+            --env-file .env \
+            -p 8100:${{ secrets.PORT }} \
+            filecapsa:${{ github.sha }}
